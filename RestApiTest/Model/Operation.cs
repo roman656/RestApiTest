@@ -2,7 +2,7 @@ namespace RestApiTest.Model;
 
 public class Operation
 {
-    public ulong Index { get; set; }
+    public ulong Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public uint Duration { get; set; }
     public uint Resource { get; set; }
