@@ -15,7 +15,7 @@ public static class Program
         
         application.MapGet("/api/tasks", () => Results.Json(Tasks));
         
-        application.MapGet("/api/tasks/{index}", (ulong index) =>
+        application.MapGet("/api/tasks/{index}", (string index) =>
         {
             var task = Tasks.FirstOrDefault(current => current.Id == index);
             
@@ -24,7 +24,7 @@ public static class Program
                     : Results.Json(task);
         });
         
-        application.MapDelete("/api/tasks/{index}", (ulong index) =>
+        application.MapDelete("/api/tasks/{index}", (string index) =>
         {
             var task = Tasks.FirstOrDefault(current => current.Id == index);
 
