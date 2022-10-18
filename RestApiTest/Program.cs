@@ -1,23 +1,22 @@
+using Microsoft.EntityFrameworkCore;
+
 namespace RestApiTest;
 
 using Task = Model.Task;
 
 public static class Program
 {
-    private static readonly List<Task> Tasks = new ();
-    
     public static void Main(string[] args)
     {
         AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);    // Фикс для DateTime в PostgreSQL.
-        LoadTasksFromDatabase();
 
         var application = WebApplication.CreateBuilder(args).Build();
         
-        application.MapGet("/api/tasks", () => Results.Json(Tasks));
+        application.MapGet("/api/tasks", () => Results.Json(LoadTasksFromDatabase()));
         
         application.MapGet("/api/tasks/{index}", (string index) =>
         {
-            var task = Tasks.FirstOrDefault(current => current.Id == index);
+            var task = LoadTasksFromDatabase().FirstOrDefault(current => current.Id == index);
             
             return task == null
                     ? Results.NotFound( new { message = $"Задача под индексом {index} не найдена." } )
@@ -26,61 +25,74 @@ public static class Program
         
         application.MapDelete("/api/tasks/{index}", (string index) =>
         {
-            var task = Tasks.FirstOrDefault(current => current.Id == index);
+            var task = LoadTasksFromDatabase().FirstOrDefault(current => current.Id == index);
 
             if (task == null)
             {
                 return Results.NotFound( new { message = $"Задача под индексом {index} не найдена." } );
             }
-
-            Tasks.Remove(task);
+            
+            DeleteTaskFromDatabase(task);
             
             return Results.Json(task);
         });
         
         application.MapPost("/api/tasks", (Task task) =>
         {
-            Task? taskFromDb;
+            SaveTasksToDatabase(new List<Task> { task });
             
-            using (var db = new ApplicationContext())
-            {
-                db.Tasks.Add(task);
-                db.SaveChanges();
-                
-                taskFromDb = db.Tasks.ToList().FirstOrDefault(current => current.Name == task.Name);
-            }
-            
-            if (taskFromDb != null)
-            {
-                Tasks.Add(taskFromDb);
-                return Results.Json(taskFromDb);
-            }
-
-            return Results.NotFound( new { message = "Не удалось сохранить задачу." } );
+            return Results.Json(task);
         });
         
-        application.MapPut("/api/tasks", (Task taskData) =>
+        application.MapPut("/api/tasks/{index}", (string index, Task taskData) =>
         {
-            var task = Tasks.FirstOrDefault(current => current.Id == taskData.Id);
-            
+            taskData.Id = index;
+            var task = LoadTasksFromDatabase().FirstOrDefault(current => current.Id == taskData.Id);
+           
             if (task == null)
             {
                 return Results.NotFound( new { message = $"Задача под индексом {taskData.Id} не найдена." } );
             }
             
-            task.Name = taskData.Name;
-            task.StartDate = taskData.StartDate;
-            /* Возможно стоит копировать операции. */
-            
-            return Results.Json(task);
+            UpdateTaskInDatabase(taskData);
+
+            return Results.Json(taskData);
         });
         
         application.Run();
     }
 
-    private static void LoadTasksFromDatabase()
+    private static List<Task> LoadTasksFromDatabase()
     {
         using var db = new ApplicationContext();
-        Tasks.AddRange(db.Tasks.ToList());
+
+        var operations = db.Operations.ToList();    // Магическим образом в Tasks подтягиваются операции.
+        
+        return db.Tasks.ToList();
+    }
+    
+    private static void SaveTasksToDatabase(List<Task> tasks)
+    {
+        using var db = new ApplicationContext();
+        
+        db.Tasks.AddRange(tasks);
+        db.SaveChanges();
+    }
+
+    /// TODO: каскадно удалять связанные операции.
+    private static void DeleteTaskFromDatabase(Task task)
+    {
+        using var db = new ApplicationContext();
+
+        db.Tasks.Where(current => current.Id == task.Id).ExecuteDelete();
+        db.SaveChanges();
+    }
+    
+    private static void UpdateTaskInDatabase(Task task)
+    {
+        using var db = new ApplicationContext();
+
+        db.Tasks.Update(task);
+        db.SaveChanges();
     }
 }

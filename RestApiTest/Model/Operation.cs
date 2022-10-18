@@ -1,13 +1,25 @@
 namespace RestApiTest.Model;
 
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 
+[Table("operations")]
 public class Operation
 {
+    [System.ComponentModel.DataAnnotations.Key]
+    [Column("id")]
     public string Id { get; set; }
+    
+    [Column("name")]
     public string Name { get; set; }
+    
+    [Column("duration")]
     public uint Duration { get; set; }
+    
+    [Column("resource")]
     public uint Resource { get; set; }
+    
+    [Column("previous_operations")]
     public List<string> PreviousOperations { get; set; }
 
     public Operation(string name, uint duration, uint resource)

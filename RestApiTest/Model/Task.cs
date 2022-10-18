@@ -1,13 +1,23 @@
 namespace RestApiTest.Model;
 
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 
+[Table("tasks")]
 public class Task
 {
     private const string DateFormat = "dd-MM-yyyy";
+    
+    [System.ComponentModel.DataAnnotations.Key]
+    [Column("id")]
     public string Id { get; set; }
+    
+    [Column("name")]
     public string Name { get; set; }
+    
+    [Column("start_date")]
     public DateTime StartDate { get; set; }
+    
     public List<Operation> Operations { get; set; }
 
     public Task(string name, DateTime startDate)
