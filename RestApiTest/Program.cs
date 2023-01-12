@@ -1,7 +1,6 @@
-using Microsoft.EntityFrameworkCore;
-
 namespace RestApiTest;
 
+using Microsoft.EntityFrameworkCore;
 using Task = Model.Task;
 
 public static class Program
