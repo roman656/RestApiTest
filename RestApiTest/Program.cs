@@ -9,9 +9,10 @@ public static class Program
     {
         AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);    // Фикс для DateTime в PostgreSQL.
 
-        var application = WebApplication.CreateBuilder(args).Build();
+        var application = WebApplication.CreateBuilder(args).Build();  
         
-        application.MapGet("/api/tasks", () => Results.Json(LoadTasksFromDatabase()));
+        application.MapGet("/api/tasks", () => Results.Json(LoadTasksFromDatabase())); 
+        
         
         application.MapGet("/api/tasks/{index}", (string index) =>
         {
@@ -21,6 +22,7 @@ public static class Program
                     ? Results.NotFound( new { message = $"Задача под индексом {index} не найдена." } )
                     : Results.Json(task);
         });
+        
         
         application.MapDelete("/api/tasks/{index}", (string index) =>
         {
@@ -36,12 +38,14 @@ public static class Program
             return Results.Json(task);
         });
         
+        
         application.MapPost("/api/tasks", (Task task) =>
         {
             SaveTasksToDatabase(new List<Task> { task });
             
             return Results.Json(task);
         });
+        
         
         application.MapPut("/api/tasks/{index}", (string index, Task taskData) =>
         {
@@ -61,6 +65,7 @@ public static class Program
         application.Run();
     }
 
+    
     private static List<Task> LoadTasksFromDatabase()
     {
         using var db = new ApplicationContext();
@@ -70,6 +75,7 @@ public static class Program
         return db.Tasks.ToList();
     }
     
+    
     private static void SaveTasksToDatabase(List<Task> tasks)
     {
         using var db = new ApplicationContext();
@@ -78,6 +84,7 @@ public static class Program
         db.SaveChanges();
     }
 
+    
     /// TODO: каскадно удалять связанные операции.
     private static void DeleteTaskFromDatabase(Task task)
     {
@@ -86,6 +93,7 @@ public static class Program
         db.Tasks.Where(current => current.Id == task.Id).ExecuteDelete();
         db.SaveChanges();
     }
+    
     
     private static void UpdateTaskInDatabase(Task task)
     {
