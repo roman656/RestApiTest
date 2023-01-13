@@ -1,15 +1,15 @@
 namespace RestApiTest.Model;
 
 using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations;
 using System.Text;
 
 [Table("operations")]
 public class Operation
 {
-    [System.ComponentModel.DataAnnotations.Key]
-    [Column("id")]
+    [Key, Column("id")]
     public string Id { get; set; }
-    
+
     [Column("name")]
     public string Name { get; set; }
     
@@ -21,12 +21,15 @@ public class Operation
     
     [Column("previous_operations")]
     public List<string> PreviousOperations { get; set; }
+    
+    public string TaskId { get; set; }
 
-    public Operation(string name, uint duration, uint resource)
+    public Operation(string name, uint duration, uint resource, string taskId)
     {
         Name = name;
         Duration = duration;
         Resource = resource;
+        TaskId = taskId;
         Id = Ulid.NewUlid().ToString();
         PreviousOperations = new List<string>();
     }
@@ -42,7 +45,7 @@ public class Operation
         {
             foreach (var operationId in PreviousOperations)
             {
-                result.Append(" ").Append(operationId).Append(",");
+                result.Append(' ').Append(operationId).Append(',');
             }
 
             result.Remove(result.Length - 1, 1);    // Удаление последней запятой.

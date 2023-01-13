@@ -1,6 +1,7 @@
 namespace RestApiTest.Model;
 
 using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations;
 using System.Text;
 
 [Table("tasks")]
@@ -8,8 +9,7 @@ public class Task
 {
     private const string DateFormat = "dd-MM-yyyy";
     
-    [System.ComponentModel.DataAnnotations.Key]
-    [Column("id")]
+    [Key, Column("id")]
     public string Id { get; set; }
     
     [Column("name")]
@@ -37,11 +37,11 @@ public class Task
 
         if (Operations.Count != 0)
         {
-            result.Append("\n");
+            result.Append('\n');
             
             foreach (var operation in Operations)
             {
-                result.Append("\t\t").Append(operation).Append("\n");
+                result.Append("\t\t").Append(operation).Append('\n');
             }
         }
         else

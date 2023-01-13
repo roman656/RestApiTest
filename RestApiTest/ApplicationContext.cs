@@ -2,12 +2,11 @@ namespace RestApiTest;
 
 using Microsoft.EntityFrameworkCore;
 using Model;
-using Task = Model.Task;
 
 public sealed class ApplicationContext : DbContext
 {
-    public DbSet<Task> Tasks { get; set; }
-    public DbSet<Operation> Operations { get; set; }
+    public DbSet<Task> Tasks { get; set; } = null!;
+    public DbSet<Operation> Operations { get; set; } = null!;
 
     public ApplicationContext() => Database.EnsureCreated();
 
@@ -19,7 +18,7 @@ public sealed class ApplicationContext : DbContext
         builder.AddJsonFile("appsettings.json");
 
         var config = builder.Build();
-        
+
         optionsBuilder.UseNpgsql(config.GetConnectionString("DefaultConnection"));
         base.OnConfiguring(optionsBuilder);
     }
