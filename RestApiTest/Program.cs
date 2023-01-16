@@ -7,24 +7,46 @@ using Grpc.Net.Client;
 
 public static class Program
 {
-    public static async System.Threading.Tasks.Task Main(string[] args)
+    public static void Main(string[] args)
     {
         AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);    // Фикс для DateTime в PostgreSQL.
         
         var application = WebApplication.CreateBuilder(args).Build();
         
-
-        using var channel = GrpcChannel.ForAddress("http://localhost:5271");
-        var client = new ProjectDurationCalculator.ProjectDurationCalculatorClient(channel);
-        var reply = await client.CalculateDurationAsync(new CalculationRequest { TaskIndex = "name3" });
-        Console.WriteLine($"Ответ сервера: {reply.OperationIndex}");
-
         AddEndpointHandlers(application);
         application.Run();
     }
 
+    private static async Task<CalculationResult> RequestDurationCalculation(string taskIndex)
+    {
+        using var channel = GrpcChannel.ForAddress("http://localhost:5271");
+        var client = new ProjectDurationCalculator.ProjectDurationCalculatorClient(channel);
+        var reply = await client.CalculateDurationAsync(new CalculationRequest { TaskIndex = taskIndex });
+        var result = new CalculationResult
+        {
+            IsCalculationSuccessful = reply.IsCalculationSuccessful,
+            Duration = reply.Duration,
+            OperationIndexes = new List<string>(reply.OperationIndex)
+        };
+
+        return result;
+    }
+
     private static void AddEndpointHandlers(WebApplication application)
     {
+        application.MapGet("/api/tasks/{index}/calculate", async (string index) =>
+        {
+            var task = ReadTasksFromDatabase().FirstOrDefault(current => current.Id == index);
+
+            if (task == null)
+            {
+                return Results.NotFound( new { message = $"Задача под индексом {index} не найдена." } );
+            }
+
+            var result = await RequestDurationCalculation(index);
+            
+            return Results.Json(result);
+        });
         application.MapGet("/api/tasks", () => Results.Json(ReadTasksFromDatabase()));
         application.MapGet("/api/tasks/{index}", (string index) =>
         {

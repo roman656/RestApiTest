@@ -15,6 +15,8 @@ public class ProjectDurationCalculatorService : ProjectDurationCalculator.Projec
         reply.IsCalculationSuccessful = true;
         reply.Duration = 0;
         reply.OperationIndex.Add(request.TaskIndex);
+        reply.OperationIndex.Add(request.TaskIndex);
+        reply.OperationIndex.Add(request.TaskIndex);
         
         return Task.FromResult(reply);
     }
