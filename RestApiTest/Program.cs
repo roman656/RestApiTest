@@ -1,18 +1,24 @@
-using RestApiTest.Model;
-
 namespace RestApiTest;
 
+using Model;
 using Microsoft.EntityFrameworkCore;
 using Task = Model.Task;
+using Grpc.Net.Client;
 
 public static class Program
 {
-    public static void Main(string[] args)
+    public static async System.Threading.Tasks.Task Main(string[] args)
     {
         AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);    // Фикс для DateTime в PostgreSQL.
         
         var application = WebApplication.CreateBuilder(args).Build();
         
+
+        using var channel = GrpcChannel.ForAddress("http://localhost:5271");
+        var client = new ProjectDurationCalculator.ProjectDurationCalculatorClient(channel);
+        var reply = await client.CalculateDurationAsync(new CalculationRequest { TaskIndex = "name3" });
+        Console.WriteLine($"Ответ сервера: {reply.OperationIndex}");
+
         AddEndpointHandlers(application);
         application.Run();
     }

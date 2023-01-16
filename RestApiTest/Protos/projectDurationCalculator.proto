@@ -1,0 +1,20 @@
+syntax = "proto3";
+option csharp_namespace = "RestApiTest";
+package projectDurationCalculator;
+
+service ProjectDurationCalculator
+{
+  rpc CalculateDuration (CalculationRequest) returns (CalculationReply);
+}
+
+message CalculationRequest
+{
+  string taskIndex = 1;
+}
+
+message CalculationReply
+{
+  bool isCalculationSuccessful = 1;
+  uint64 duration = 2;
+  repeated string operationIndex = 3;
+}
