@@ -6,7 +6,7 @@ public static class Program
 {
     public static void Main(string[] args)
     {
-        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true); // Фикс для DateTime в PostgreSQL.
+        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);    // Фикс для DateTime в PostgreSQL.
 
         var builder = WebApplication.CreateBuilder(args);
 
