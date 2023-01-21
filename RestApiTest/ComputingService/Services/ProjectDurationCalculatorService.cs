@@ -1,5 +1,7 @@
 namespace ComputingService.Services;
 
+using System.Text.Json;
+using StackExchange.Redis;
 using Microsoft.EntityFrameworkCore;
 using Model;
 using Task = Task;
@@ -9,11 +11,51 @@ public class ProjectDurationCalculatorService : ProjectDurationCalculator.Projec
 {
     private const int SequencesTotalAmount = 1000000;
     private const ulong MaxResourcesAmount = 10;
+    private const int ExpireTimeInSeconds = 15;
     private static readonly int ThreadsAmount = Environment.ProcessorCount;
+    private readonly IDatabase _redis;
+    
+    public ProjectDurationCalculatorService(IConnectionMultiplexer muxer)
+    {
+        _redis = muxer.GetDatabase();
+    }
+
+    private async Task<CalculationResult> CheckCalculationResultInRedis(string taskIndex)
+    {
+        var json = await _redis.StringGetAsync(taskIndex);
+
+        return string.IsNullOrEmpty(json)
+                ? new CalculationResult()
+                : JsonSerializer.Deserialize<CalculationResult>(json);
+    }
+    
+    private async void SaveCalculationResultInRedis(string taskIndex, CalculationResult calculationResult)
+    {
+        var json = JsonSerializer.Serialize(calculationResult);
+        
+        if (!string.IsNullOrEmpty(json))
+        {
+            var setTask = _redis.StringSetAsync(taskIndex, json);
+            var expireTask = _redis.KeyExpireAsync(taskIndex, TimeSpan.FromSeconds(ExpireTimeInSeconds));
+            
+            await Task.WhenAll(setTask, expireTask);
+        }
+    }
 
     public override Task<CalculationReply> CalculateDuration(CalculationRequest request, ServerCallContext context)
     {
         var reply = new CalculationReply();
+        var resultFromRedis = CheckCalculationResultInRedis(request.TaskIndex).Result;
+
+        if (resultFromRedis.IsCalculationSuccessful)
+        {
+            reply.IsCalculationSuccessful = resultFromRedis.IsCalculationSuccessful;
+            reply.Duration = resultFromRedis.Duration;
+            reply.OperationIndex.Add(resultFromRedis.OperationIndexes);
+
+            return Task.FromResult(reply);
+        }
+        
         var threads = new Thread[ThreadsAmount];
         var calculationResults = new CalculationResult[ThreadsAmount];
         var sequencesAmount = SequencesTotalAmount / ThreadsAmount;
@@ -47,7 +89,9 @@ public class ProjectDurationCalculatorService : ProjectDurationCalculator.Projec
         reply.IsCalculationSuccessful = result.IsCalculationSuccessful;
         reply.Duration = result.Duration;
         reply.OperationIndex.Add(result.OperationIndexes);
-
+        
+        SaveCalculationResultInRedis(request.TaskIndex, result);
+        
         return Task.FromResult(reply);
     }
 

@@ -1,6 +1,7 @@
 namespace ComputingService;
 
 using Services;
+using StackExchange.Redis;
 
 public static class Program
 {
@@ -11,6 +12,7 @@ public static class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.Services.AddGrpc();
+        builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect("localhost"));
 
         var application = builder.Build();
         
