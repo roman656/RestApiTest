@@ -9,7 +9,7 @@ public class ProjectDurationCalculatorService : ProjectDurationCalculator.Projec
 {
     private const int SequencesTotalAmount = 1000000;
     private const ulong MaxResourcesAmount = 10;
-    private static readonly int ThreadsAmount = 1;//Environment.ProcessorCount;
+    private static readonly int ThreadsAmount = Environment.ProcessorCount;
 
     public override Task<CalculationReply> CalculateDuration(CalculationRequest request, ServerCallContext context)
     {
