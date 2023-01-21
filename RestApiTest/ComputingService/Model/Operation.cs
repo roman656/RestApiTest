@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Text;
 
 [Table("operations")]
-public class Operation
+public class Operation : ICloneable
 {
     [Key, Column("id")]
     public string Id { get; set; }
@@ -33,6 +33,16 @@ public class Operation
         Id = Ulid.NewUlid().ToString();
         PreviousOperations = new List<string>();
     }
+    
+    private Operation(string id, string name, uint duration, uint resource, in List<string> previousOperations, string taskId)
+    {
+        Name = name;
+        Duration = duration;
+        Resource = resource;
+        TaskId = taskId;
+        Id = id;
+        PreviousOperations = new List<string>(previousOperations);
+    }
 
     public override string ToString()
     {
@@ -58,5 +68,10 @@ public class Operation
         result.Append(" }");
 
         return result.ToString();
+    }
+
+    public object Clone()
+    {
+        return new Operation(Id, Name, Duration, Resource, PreviousOperations, TaskId);
     }
 }
