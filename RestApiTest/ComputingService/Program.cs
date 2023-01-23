@@ -10,9 +10,14 @@ public static class Program
         AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);    // Фикс для DateTime в PostgreSQL.
 
         var builder = WebApplication.CreateBuilder(args);
+        var options = new ConfigurationOptions
+        {
+            AbortOnConnectFail = false,
+            EndPoints = { "localhost" }
+        };
 
         builder.Services.AddGrpc();
-        builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect("localhost"));
+        builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(options));
 
         var application = builder.Build();
         

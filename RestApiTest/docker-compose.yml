@@ -11,12 +11,32 @@ services:
       - '5432:5432'
     volumes:
       - database:/var/lib/postgresql/data
+    networks:
+      - backend
   cache:
     container_name: rest_api_test_redis
     image: redis:6.2-alpine
     restart: always
     ports:
       - '6379:6379'
+    networks:
+      - backend
+  #calculator:
+    #container_name: rest_api_test_calculator
+    #build:
+      #context: ComputingService/
+      #dockerfile: Dockerfile
+    #ports:
+      #- "5271:5271"
+    #depends_on:
+      #- cache
+      #- database
+    #networks:
+      #- backend
 volumes:
   database:
     driver: local
+networks:
+  backend:
+    driver:
+      bridge
